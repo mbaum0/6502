@@ -1,0 +1,37 @@
+Working with the W65C265SXB development board on a Mac
+
+I attempted to attach to the device with screen using:
+ screen /dev/tty.usbserial-A10LVXT6 960
+It seems to be listening to the device just fine. When I press 'reset' on the board, I get a dump of text but screen doesn't newline it
+and the output keeps overwriting itself. I think the board is only sending CRs and no NLs.
+
+I tried to use picocom instead to confirm my suspicions:
+ picocom /dev/tty.usbserial-A10LVXT6 --baud 9600 --imap spchex,tabhex,crhex,lfhex
+
+This command ensures that spc,tab,cr, and lf characters are sent as their hex strings. This worked and confirmed that the device was only sending carraige returns:
+
+[00][0d]MENSCH ROM Version 2.07[0d] (C) Copyright 1995[0d]Assembled Mon Feb  6 10:03:42 1995[0d][0d]PCntr     Acc    Xreg   Yreg   Stack[0d]00:E358   00 00  E0 B7  00 FF  01 FF  [0d][0d]  DirRg  F  DBk[0d]  00 00  22 00  [0d][0d][0d]Status Reg[0d]N  V  M  X  D  I  Z  C[0d]0  0  1  0  0  0  1  0  [0d][0d]>
+
+"0D" is the character for carraige returns. There should be a way to get picocom to insert a LF character for us.
+
+I couldn't find a way to do this in Picocom :(. I have another terminal emualtor tool call "Serial" (which isn't free) that has an option for this buried in settings "Interpret Standalone CR as CRLF". This did the trick.
+
+MENSCH ROM Version 2.07
+ (C) Copyright 1995
+Assembled Mon Feb  6 10:03:42 1995
+
+PCntr     Acc    Xreg   Yreg   Stack
+00:E358   00 00  E0 B7  00 00  01 FF  
+
+  DirRg  F  DBk
+  00 00  22 00  
+
+
+Status Reg
+N  V  M  X  D  I  Z  C
+0  0  1  0  0  0  1  0 
+
+The included monitor ROM has tools to read registers and rw to memory. I'm going to try to flip some bits to make one of the LEDs turn on.
+
+
+
